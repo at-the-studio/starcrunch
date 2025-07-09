@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦕🚀 Starcrunch Command Center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated stars background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, white, transparent),
+                radial-gradient(2px 2px at 40px 70px, white, transparent),
+                radial-gradient(1px 1px at 50px 90px, white, transparent),
+                radial-gradient(1px 1px at 130px 80px, white, transparent),
+                radial-gradient(2px 2px at 200px 10px, white, transparent);
+            background-repeat: repeat;
+            background-size: 250px 250px;
+            animation: sparkle 10s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes sparkle {
+            from { transform: translateY(0); }
+            to { transform: translateY(-250px); }
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 20px 30px;
+            background: linear-gradient(135deg, rgba(26,35,126,0.2) 0%, rgba(13,71,161,0.1) 100%);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 300;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #b8860b, #daa520);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .widget {
+            background: rgba(13,17,23,0.6);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .widget:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.6);
+            border-color: rgba(218,165,32,0.3);
+        }
+
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .widget-title {
+            font-size: 1.2em;
+            color: #daa520;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .widget-icon {
+            font-size: 1.5em;
+        }
+
+        .expand-btn {
+            background: rgba(218,165,32,0.2);
+            border: 1px solid rgba(218,165,32,0.3);
+            color: #daa520;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .expand-btn:hover {
+            background: rgba(218,165,32,0.3);
+        }
+
+        /* Task Widget Enhancements */
+        .task-list {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .task-item {
+            background: rgba(255,255,255,0.05);
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border-left: 3px solid;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .task-item:hover {
+            background: rgba(255,255,255,0.08);
+            transform: translateX(2px);
+        }
+
+        .task-item.high {
+            border-left-color: #e74c3c;
+        }
+
+        .task-item.medium {
+            border-left-color: #f39c12;
+        }
+
+        .task-item.low {
+            border-left-color: #3498db;
+        }
+
+        .task-item.completed {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-text {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .task-meta {
+            font-size: 0.8em;
+            color: #999;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #555;
+            border-radius: 4px;
+            cursor: pointer;
+            background: transparent;
+            position: relative;
+            margin-left: 10px;
+        }
+
+        .task-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: -2px;
+            left: 2px;
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        /* Quick Add Task */
+        .quick-add {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+        }
+
+        .quick-add input {
+            flex: 1;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: #e0e0e0;
+            font-size: 0.9em;
+        }
+
+        .quick-add input::placeholder {
+            color: #666;
+        }
+
+        .quick-add button {
+            background: #daa520;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            color: #000;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-add button:hover {
+            background: #b8860b;
+        }
+
+        /* Calendar Widget */
+        .mini-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            font-size: 0.85em;
+            margin-bottom: 15px;
+        }
+
+        .cal-header {
+            text-align: center;
+            font-weight: 500;
+            color: #daa520;
+            padding: 8px 0;
+        }
+
+        .cal-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cal-day:hover {
+            background: rgba(255,255,255,0.1);
+            transform: scale(1.05);
+        }
+
+        .cal-day.selected {
+            background: rgba(218,165,32,0.3);
+            border: 2px solid #daa520;
+        }
+
+        .cal-day.has-tasks::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            width: 4px;
+            height: 4px;
+            background: #daa520;
+            border-radius: 50%;
+        }
+
+        .today {
+            background: rgba(218,165,32,0.2) !important;
+            border: 1px solid rgba(218,165,32,0.5);
+            font-weight: bold;
+        }
+
+        /* Progress Widget */
+        .progress-rings {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .ring-container {
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ring-container:hover {
+            transform: scale(1.1);
+        }
+
+        .progress-ring {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+
+        .progress-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2em;
+            font-weight: 500;
+            color: #daa520;
+        }
+
+        .ring-label {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #999;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #daa520;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9em;
+        }
+
+        .action-btn:hover {
+            background: rgba(218,165,32,0.2);
+            border-color: rgba(218,165,32,0.3);
+            transform: translateY(-1px);
+        }
+
+        /* Brain Dump Widget */
+        .brain-dump {
+            min-height: 200px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 15px;
+            color: #ccc;
+            font-family: 'Courier New', monospace;
+            resize: none;
+            width: 100%;
+            font-size: 0.9em;
+        }
+
+        /* Modal for Discord Bot Instructions */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+        }
+
+        .modal-content {
+            background: rgba(13,17,23,0.9);
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+        }
+
+        .modal-content.large {
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .daily-note-input {
+            width: 100%;
+            min-height: 200px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 15px;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+
+        .daily-note-input::placeholder {
+            color: #666;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+
+        .modal-btn {
+            background: #daa520;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            color: #000;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn:hover {
+            background: #b8860b;
+        }
+
+        .modal-btn.secondary {
+            background: rgba(255,255,255,0.1);
+            color: #e0e0e0;
+        }
+
+        .modal-btn.secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #daa520;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(218,165,32,0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(218,165,32,0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🦕🚀 STARCRUNCH COMMAND CENTER</h1>
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-indicator" id="api-status"></div>
+                    <span id="api-status-text">Connecting...</span>
+                </div>
+                <div class="status-item">
+                    <span id="current-date">Loading...</span>
+                </div>
+                <div class="status-item">
+                    <span id="current-time">Loading...</span>
+                </div>
+                <div class="status-item">
+                    <span id="user-info">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Task Manager Widget -->
+            <div class="widget">
+                <div class="widget-header">
+                    <div class="widget-title">
+                        <span class="widget-icon">🎯</span>
+                        <span>Mission Tasks</span>
+                    </div>
+                    <button class="expand-btn" onclick="openDiscordModal()">🤖 Bot Commands</button>
+                </div>
+                
+                <div class="quick-add">
+                    <input type="text" id="newTaskInput" placeholder="Add a new task..." onkeypress="handleTaskInput(event)">
+                    <button onclick="addTask()">Add</button>
+                </div>
+                
+                <div class="task-list" id="taskList">
+                    <!-- Tasks will be loaded here -->
+                </div>
+                
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.9em; color: #999;">
+                    💡 Pro tip: Use the Discord bot with <code>/schedule</code> to automatically parse and categorize tasks!
+                </div>
+            </div>
+
+            <!-- Calendar Widget -->
+            <div class="widget">
+                <div class="widget-header">
+                    <div class="widget-title">
+                        <span class="widget-icon">📅</span>
+                        <span>Mission Calendar</span>
+                    </div>
+                    <button class="expand-btn" onclick="previousMonth()">← Prev</button>
+                    <button class="expand-btn" onclick="nextMonth()">Next →</button>
+                </div>
+                <div class="mini-calendar" id="calendar">
+                    <!-- Calendar will be generated here -->
+                </div>
+                <p id="calendar-info" style="font-size: 0.9em; color: #999; text-align: center;">
+                    Loading calendar...
+                </p>
+            </div>
+
+            <!-- Progress Tracker Widget -->
+            <div class="widget">
+                <div class="widget-header">
+                    <div class="widget-title">
+                        <span class="widget-icon">📊</span>
+                        <span>Mission Progress</span>
+                    </div>
+                </div>
+                <div class="progress-rings">
+                    <div class="ring-container" onclick="openProgressModal('tasks')">
+                        <div class="progress-ring">
+                            <svg width="80" height="80">
+                                <circle cx="40" cy="40" r="35" stroke="rgba(255,255,255,0.1)" stroke-width="8" fill="none"/>
+                                <circle cx="40" cy="40" r="35" stroke="#daa520" stroke-width="8" fill="none"
+                                        stroke-dasharray="220" stroke-dashoffset="132" stroke-linecap="round" id="tasks-progress"/>
+                            </svg>
+                            <div class="progress-text" id="tasks-percent">0%</div>
+                        </div>
+                        <div class="ring-label">Tasks</div>
+                    </div>
+                    <div class="ring-container" onclick="openProgressModal('energy')">
+                        <div class="progress-ring">
+                            <svg width="80" height="80">
+                                <circle cx="40" cy="40" r="35" stroke="rgba(255,255,255,0.1)" stroke-width="8" fill="none"/>
+                                <circle cx="40" cy="40" r="35" stroke="#3498db" stroke-width="8" fill="none"
+                                        stroke-dasharray="220" stroke-dashoffset="176" stroke-linecap="round"/>
+                            </svg>
+                            <div class="progress-text">20%</div>
+                        </div>
+                        <div class="ring-label">Energy</div>
+                    </div>
+                    <div class="ring-container" onclick="openProgressModal('focus')">
+                        <div class="progress-ring">
+                            <svg width="80" height="80">
+                                <circle cx="40" cy="40" r="35" stroke="rgba(255,255,255,0.1)" stroke-width="8" fill="none"/>
+                                <circle cx="40" cy="40" r="35" stroke="#e74c3c" stroke-width="8" fill="none"
+                                        stroke-dasharray="220" stroke-dashoffset="88" stroke-linecap="round"/>
+                            </svg>
+                            <div class="progress-text">60%</div>
+                        </div>
+                        <div class="ring-label">Focus</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Brain Dump Widget -->
+            <div class="widget">
+                <div class="widget-header">
+                    <div class="widget-title">
+                        <span class="widget-icon">🧠</span>
+                        <span>Brain Dump</span>
+                    </div>
+                    <button class="expand-btn" onclick="saveBrainDump()">💾 Save</button>
+                </div>
+                <textarea class="brain-dump" id="brainDump" placeholder="Quick thoughts, ideas, things to remember..." onchange="autoSaveBrainDump()"></textarea>
+            </div>
+
+            <!-- Quick Actions Widget -->
+            <div class="widget">
+                <div class="widget-header">
+                    <div class="widget-title">
+                        <span class="widget-icon">⚡</span>
+                        <span>Quick Actions</span>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <button class="action-btn" onclick="startTimer(25)">🦕 Pomodoro (25m)</button>
+                    <button class="action-btn" onclick="startTimer(60)">📺 Animedoro (60m)</button>
+                    <button class="action-btn" onclick="openDiscordModal()">🤖 Discord Bot</button>
+                    <button class="action-btn" onclick="toggleFocusMode()">🎯 Focus Mode</button>
+                    <button class="action-btn" onclick="exportTasks()">📤 Export Tasks</button>
+                    <button class="action-btn" onclick="clearCompleted()">🧹 Clear Done</button>
+                </div>
+            </div>
+
+            <!-- Daily Summary Widget -->
+            <div class="widget">
+                <div class="widget-header">
+                    <div class="widget-title">
+                        <span class="widget-icon">🌟</span>
+                        <span>Mission Summary</span>
+                    </div>
+                </div>
+                <div id="dailySummary" style="font-size: 0.9em; line-height: 1.6;">
+                    <!-- Summary content will be generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Discord Bot Modal -->
+    <div id="discordModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeDiscordModal()">&times;</span>
+            <h2 style="color: #daa520; margin-bottom: 20px;">🦕🚀 Starcrunch Discord Bot</h2>
+            <p style="margin-bottom: 15px;">Connect with Starcrunch on Discord for advanced task scheduling!</p>
+            
+            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <h3 style="color: #daa520; margin-bottom: 10px;">Available Commands:</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="margin-bottom: 8px;"><code>/schedule</code> - Add tasks with smart parsing</li>
+                    <li style="margin-bottom: 8px;"><code>/show_week</code> - View your weekly schedule</li>
+                    <li style="margin-bottom: 8px;"><code>/complete</code> - Mark tasks as done</li>
+                    <li style="margin-bottom: 8px;"><code>/exclude</code> - Set unavailable times</li>
+                    <li style="margin-bottom: 8px;"><code>/set_duration</code> - Customize task durations</li>
+                    <li><code>/help</code> - Show all commands</li>
+                </ul>
+            </div>
+            
+            <p style="color: #999; font-size: 0.9em;">
+                Example: <code>/schedule Clean kitchen, Dentist 2pm Tuesday, Buy groceries</code>
+            </p>
+        </div>
+    </div>
+
+    <!-- Daily Notes Modal -->
+    <div id="dailyNotesModal" class="modal">
+        <div class="modal-content large">
+            <span class="close" onclick="closeDailyNotesModal()">&times;</span>
+            <h2 style="color: #daa520; margin-bottom: 20px;">📅 Daily Notes - <span id="selectedDateText"></span></h2>
+            
+            <div style="margin-bottom: 15px;">
+                <h3 style="color: #daa520; margin-bottom: 10px;">📋 Tasks for this day:</h3>
+                <div id="dailyTasksList" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px; min-height: 60px;">
+                    <!-- Tasks for selected day will appear here -->
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <h3 style="color: #daa520; margin-bottom: 10px;">📝 Notes:</h3>
+                <textarea id="dailyNotesInput" class="daily-note-input" 
+                          placeholder="Write your thoughts, reflections, or plans for this day..."></textarea>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn secondary" onclick="closeDailyNotesModal()">Cancel</button>
+                <button class="modal-btn" onclick="saveDailyNotes()">💾 Save Notes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Details Modal -->
+    <div id="progressModal" class="modal">
+        <div class="modal-content large">
+            <span class="close" onclick="closeProgressModal()">&times;</span>
+            <h2 style="color: #daa520; margin-bottom: 20px;">📊 Progress Details - <span id="progressType"></span></h2>
+            
+            <div id="progressDetails" style="line-height: 1.6;">
+                <!-- Progress details will be populated here -->
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn" onclick="closeProgressModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 🔹---💠---🔹•DASHBOARD STATE•🔹---💠---🔹
+        let tasks = [];
+        let currentDate = new Date();
+        let brainDumpTimer;
+        let selectedDate = null;
+        let dailyNotes = {};
+        let currentUserId = null;
+        
+        // API Configuration
+        const API_BASE_URL = window.location.origin + '/api';
+        
+        // Get user ID from URL or prompt
+        function getUserId() {
+            const pathSegments = window.location.pathname.split('/');
+            if (pathSegments.length > 2 && pathSegments[1] === 'dashboard') {
+                return pathSegments[2];
+            }
+            
+            // For local development or if no user ID in URL
+            let userId = localStorage.getItem('starcrunch_user_id');
+            if (!userId) {
+                userId = prompt('🦕 Enter your Discord User ID to sync with your tasks:');
+                if (userId) {
+                    localStorage.setItem('starcrunch_user_id', userId);
+                }
+            }
+            return userId;
+        }
+        
+        // API Helper Functions
+        async function apiRequest(endpoint, options = {}) {
+            const url = `${API_BASE_URL}${endpoint}`;
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                },
+                ...options
+            };
+            
+            try {
+                const response = await fetch(url, config);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    console.error('API Error:', data.error);
+                    updateApiStatus(false);
+                    return null;
+                }
+                
+                updateApiStatus(true);
+                return data;
+            } catch (error) {
+                console.error('Network Error:', error);
+                updateApiStatus(false);
+                return null;
+            }
+        }
+
+        function updateApiStatus(isOnline) {
+            const statusIndicator = document.getElementById('api-status');
+            const statusText = document.getElementById('api-status-text');
+            
+            if (isOnline) {
+                statusIndicator.style.background = '#4ade80';
+                statusText.textContent = 'API Connected';
+            } else {
+                statusIndicator.style.background = '#e74c3c';
+                statusText.textContent = 'API Offline';
+            }
+        }
+
+        // 🔹---💠---🔹•INITIALIZATION•🔹---💠---🔹
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Get user ID first
+            currentUserId = getUserId();
+            
+            if (!currentUserId) {
+                document.body.innerHTML = '<div style="text-align: center; color: #e74c3c; font-size: 1.2em; margin-top: 100px;">🦕 No User ID provided. Please add your Discord User ID to the URL.</div>';
+                return;
+            }
+            
+            // Show loading state
+            document.body.style.opacity = '0.7';
+            
+            // Load data from API
+            await loadTasks();
+            await loadDailyNotes();
+            generateCalendar();
+            updateDateTime();
+            updateProgress();
+            updateDailySummary();
+            loadBrainDump(); // Keep this as localStorage for now
+            
+            // Remove loading state
+            document.body.style.opacity = '1';
+            
+            // Update user info
+            updateUserInfo();
+            
+            // Update time every second
+            setInterval(updateDateTime, 1000);
+            
+            // Update progress every 30 seconds
+            setInterval(updateProgress, 30000);
+            
+            // Sync with API every 60 seconds
+            setInterval(async () => {
+                await loadTasks();
+                await loadDailyNotes();
+                generateCalendar();
+                updateProgress();
+                updateDailySummary();
+            }, 60000);
+        });
+
+        // 🔹---💠---🔹•TASK MANAGEMENT•🔹---💠---🔹
+        async function loadTasks() {
+            if (!currentUserId) return;
+            
+            const result = await apiRequest(`/tasks?userId=${currentUserId}`);
+            if (result && result.tasks) {
+                tasks = result.tasks;
+                renderTasks();
+            } else {
+                console.log('🦕 No tasks found or API error');
+                tasks = [];
+                renderTasks();
+            }
+        }
+
+        async function saveTasks() {
+            // Tasks are now saved individually through API calls
+            updateProgress();
+            updateDailySummary();
+        }
+
+        async function addTask() {
+            const input = document.getElementById('newTaskInput');
+            const text = input.value.trim();
+            
+            if (!text || !currentUserId) return;
+            
+            const task = {
+                id: 'task_' + Date.now(),
+                text: text,
+                category: 'generic',
+                priority: 'medium',
+                completed: false,
+                duration: 60,
+                createdAt: new Date().toISOString()
+            };
+            
+            // Save to API
+            const result = await apiRequest(`/tasks?userId=${currentUserId}`, {
+                method: 'POST',
+                body: JSON.stringify(task)
+            });
+            
+            if (result) {
+                // Add to local array and re-render
+                tasks.unshift(task);
+                input.value = '';
+                renderTasks();
+                updateProgress();
+                updateDailySummary();
+            } else {
+                alert('🦕 Failed to add task. Please try again!');
+            }
+        }
+
+        function handleTaskInput(event) {
+            if (event.key === 'Enter') {
+                addTask();
+            }
+        }
+
+        async function toggleTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task || !currentUserId) return;
+            
+            const wasCompleted = task.completed;
+            task.completed = !task.completed;
+            
+            if (task.completed) {
+                task.completedAt = new Date().toISOString();
+                // Mark as completed via API
+                const result = await apiRequest(`/complete?userId=${currentUserId}&taskId=${taskId}`, {
+                    method: 'POST'
+                });
+                
+                if (!result) {
+                    // Revert on failure
+                    task.completed = wasCompleted;
+                    alert('🦕 Failed to update task. Please try again!');
+                    return;
+                }
+            } else {
+                // Update task via API
+                const result = await apiRequest(`/tasks?userId=${currentUserId}&taskId=${taskId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ completed: false })
+                });
+                
+                if (!result) {
+                    // Revert on failure
+                    task.completed = wasCompleted;
+                    alert('🦕 Failed to update task. Please try again!');
+                    return;
+                }
+            }
+            
+            renderTasks();
+            updateProgress();
+            updateDailySummary();
+        }
+
+        async function deleteTask(taskId) {
+            if (!currentUserId) return;
+            
+            // TODO: Implement delete endpoint if needed
+            // For now, just remove from local array
+            tasks = tasks.filter(t => t.id !== taskId);
+            renderTasks();
+            updateProgress();
+            updateDailySummary();
+        }
+
+        function renderTasks() {
+            const container = document.getElementById('taskList');
+            const pendingTasks = tasks.filter(t => !t.completed);
+            const completedTasks = tasks.filter(t => t.completed);
+            
+            let html = '';
+            
+            // Render pending tasks first
+            pendingTasks.forEach(task => {
+                const categoryEmoji = {
+                    'appointment': '📅',
+                    'cleaning': '🧹',
+                    'errands': '🛍️',
+                    'work': '💼',
+                    'personal': '👤',
+                    'generic': '📋'
+                };
+                
+                const priorityEmoji = {
+                    'high': '🔥',
+                    'medium': '⚡',
+                    'low': '💤'
+                };
+                
+                html += `
+                    <div class="task-item ${task.priority}" onclick="event.stopPropagation()">
+                        <div class="task-content">
+                            <div class="task-text">${task.text}</div>
+                            <div class="task-meta">
+                                <span>${categoryEmoji[task.category] || '📋'} ${task.category}</span>
+                                <span>${priorityEmoji[task.priority] || '⚡'} ${task.priority}</span>
+                                <span>⏱️ ${task.duration}m</span>
+                            </div>
+                        </div>
+                        <input type="checkbox" class="task-checkbox" onchange="toggleTask('${task.id}')" ${task.completed ? 'checked' : ''}>
+                    </div>
+                `;
+            });
+            
+            // Add separator if there are completed tasks
+            if (completedTasks.length > 0 && pendingTasks.length > 0) {
+                html += '<div style="border-top: 1px solid rgba(255,255,255,0.1); margin: 15px 0; padding-top: 15px;"></div>';
+            }
+            
+            // Render completed tasks (collapsed)
+            completedTasks.slice(0, 3).forEach(task => {
+                html += `
+                    <div class="task-item completed ${task.priority}" onclick="event.stopPropagation()">
+                        <div class="task-content">
+                            <div class="task-text">${task.text}</div>
+                            <div class="task-meta">
+                                <span>✅ Completed</span>
+                            </div>
+                        </div>
+                        <input type="checkbox" class="task-checkbox" onchange="toggleTask('${task.id}')" checked>
+                    </div>
+                `;
+            });
+            
+            if (completedTasks.length > 3) {
+                html += `<div style="text-align: center; color: #666; font-size: 0.8em; margin-top: 10px;">+${completedTasks.length - 3} more completed tasks</div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // 🔹---💠---🔹•CALENDAR•🔹---💠---🔹
+        function generateCalendar() {
+            const container = document.getElementById('calendar');
+            const info = document.getElementById('calendar-info');
+            
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const today = new Date();
+            
+            // Clear calendar
+            container.innerHTML = '';
+            
+            // Add day headers
+            const dayHeaders = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+            dayHeaders.forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'cal-header';
+                dayElement.textContent = day;
+                container.appendChild(dayElement);
+            });
+            
+            // Get first day of month and number of days
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - (firstDay.getDay() + 6) % 7);
+            
+            // Generate calendar days
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                
+                const dayElement = document.createElement('div');
+                dayElement.className = 'cal-day';
+                dayElement.textContent = date.getDate();
+                
+                // Add click functionality
+                const dateString = date.toDateString();
+                dayElement.addEventListener('click', () => openDailyNotes(dateString));
+                
+                // Add classes
+                if (date.getMonth() !== month) {
+                    dayElement.style.opacity = '0.3';
+                }
+                
+                if (date.toDateString() === today.toDateString()) {
+                    dayElement.classList.add('today');
+                }
+                
+                // Check if day has tasks or notes
+                const hasTasksThisDay = tasks.some(task => {
+                    const taskDate = task.scheduledDay || task.createdAt;
+                    return taskDate && new Date(taskDate).toDateString() === dateString;
+                });
+                
+                const hasNotesThisDay = dailyNotes[dateString] && dailyNotes[dateString].trim();
+                
+                if (hasTasksThisDay || hasNotesThisDay) {
+                    dayElement.classList.add('has-tasks');
+                }
+                
+                container.appendChild(dayElement);
+            }
+            
+            // Update info
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            info.textContent = `${monthNames[month]} ${year}`;
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            generateCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            generateCalendar();
+        }
+
+        // 🔹---💠---🔹•PROGRESS TRACKING•🔹---💠---🔹
+        function updateProgress() {
+            const totalTasks = tasks.length;
+            const completedTasks = tasks.filter(t => t.completed).length;
+            const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            
+            // Update tasks progress ring
+            const progressRing = document.getElementById('tasks-progress');
+            const progressText = document.getElementById('tasks-percent');
+            
+            const circumference = 2 * Math.PI * 35;
+            const offset = circumference - (percentage / 100) * circumference;
+            
+            if (progressRing) {
+                progressRing.style.strokeDashoffset = offset;
+            }
+            
+            if (progressText) {
+                progressText.textContent = `${percentage}%`;
+            }
+        }
+
+        // 🔹---💠---🔹•UTILITY FUNCTIONS•🔹---💠---🔹
+        function updateDateTime() {
+            const now = new Date();
+            
+            const dateOptions = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            
+            const timeOptions = {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+            
+            document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', dateOptions);
+            document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', timeOptions) + ' UTC';
+        }
+
+        function updateUserInfo() {
+            const userInfoElement = document.getElementById('user-info');
+            if (currentUserId) {
+                userInfoElement.textContent = `User: ${currentUserId}`;
+            } else {
+                userInfoElement.textContent = 'No user connected';
+            }
+        }
+
+        function updateDailySummary() {
+            const container = document.getElementById('dailySummary');
+            const totalTasks = tasks.length;
+            const completedTasks = tasks.filter(t => t.completed).length;
+            const pendingTasks = totalTasks - completedTasks;
+            const highPriorityTasks = tasks.filter(t => !t.completed && t.priority === 'high').length;
+            
+            let html = '<p style="margin-bottom: 10px;">📊 Today\'s Mission Status:</p>';
+            
+            if (completedTasks > 0) {
+                html += `<p style="color: #4ade80;">✅ ${completedTasks} tasks completed</p>`;
+            }
+            
+            if (pendingTasks > 0) {
+                html += `<p style="color: #f39c12;">⏳ ${pendingTasks} tasks remaining</p>`;
+            }
+            
+            if (highPriorityTasks > 0) {
+                html += `<p style="color: #e74c3c;">🔥 ${highPriorityTasks} high priority tasks</p>`;
+            }
+            
+            if (completedTasks === totalTasks && totalTasks > 0) {
+                html += '<p style="color: #4ade80; margin-top: 10px;">🏆 All missions complete! Outstanding work, space explorer! 🚀</p>';
+            } else {
+                html += '<p style="color: #999; margin-top: 10px;">🦕 Keep going, space explorer! You\'re doing great! 🚀</p>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // 🔹---💠---🔹•BRAIN DUMP•🔹---💠---🔹
+        function loadBrainDump() {
+            const stored = localStorage.getItem('starcrunch_brain_dump');
+            if (stored) {
+                document.getElementById('brainDump').value = stored;
+            }
+        }
+
+        function autoSaveBrainDump() {
+            clearTimeout(brainDumpTimer);
+            brainDumpTimer = setTimeout(() => {
+                const content = document.getElementById('brainDump').value;
+                localStorage.setItem('starcrunch_brain_dump', content);
+            }, 1000);
+        }
+
+        function saveBrainDump() {
+            const content = document.getElementById('brainDump').value;
+            localStorage.setItem('starcrunch_brain_dump', content);
+            
+            // Show saved feedback
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✓ Saved!';
+            btn.style.background = '#4ade80';
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '';
+            }, 2000);
+        }
+
+        // 🔹---💠---🔹•QUICK ACTIONS•🔹---💠---🔹
+        function startTimer(minutes) {
+            alert(`🦕 Starting ${minutes}-minute focus session! Stay focused, space explorer! 🚀`);
+            // TODO: Implement actual timer functionality
+        }
+
+        function toggleFocusMode() {
+            document.body.classList.toggle('focus-mode');
+            // TODO: Implement focus mode styling
+            alert('🎯 Focus mode toggled! Minimize distractions and get those tasks done! 🦕');
+        }
+
+        function exportTasks() {
+            const data = {
+                tasks: tasks,
+                brainDump: document.getElementById('brainDump').value,
+                exported: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `starcrunch-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function clearCompleted() {
+            if (confirm('🦕 Are you sure you want to clear all completed tasks?')) {
+                // For now, just filter locally
+                // TODO: Implement bulk delete API endpoint
+                tasks = tasks.filter(t => !t.completed);
+                renderTasks();
+                updateProgress();
+                updateDailySummary();
+            }
+        }
+
+        // 🔹---💠---🔹•MODAL FUNCTIONS•🔹---💠---🔹
+        function openDiscordModal() {
+            document.getElementById('discordModal').style.display = 'block';
+        }
+
+        function closeDiscordModal() {
+            document.getElementById('discordModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modals = ['discordModal', 'dailyNotesModal', 'progressModal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // 🔹---💠---🔹•DAILY NOTES FUNCTIONALITY•🔹---💠---🔹
+        async function loadDailyNotes() {
+            if (!currentUserId) return;
+            
+            const result = await apiRequest(`/notes?userId=${currentUserId}`);
+            if (result && result.notes) {
+                // Convert array of notes to object keyed by date
+                dailyNotes = {};
+                result.notes.forEach(note => {
+                    dailyNotes[note.date_string] = note.notes;
+                });
+            } else {
+                console.log('🦕 No daily notes found or API error');
+                dailyNotes = {};
+            }
+        }
+
+        async function saveDailyNotesToStorage() {
+            // Notes are now saved individually through API calls
+            return true;
+        }
+
+        function openDailyNotes(dateString) {
+            selectedDate = dateString;
+            const modal = document.getElementById('dailyNotesModal');
+            const dateText = document.getElementById('selectedDateText');
+            const notesInput = document.getElementById('dailyNotesInput');
+            const tasksList = document.getElementById('dailyTasksList');
+            
+            // Set the date text
+            const date = new Date(dateString);
+            dateText.textContent = date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            // Load existing notes
+            notesInput.value = dailyNotes[dateString] || '';
+            
+            // Show tasks for this day
+            const tasksForDay = tasks.filter(task => {
+                const taskDate = task.scheduledDay || task.createdAt;
+                return taskDate && new Date(taskDate).toDateString() === dateString;
+            });
+            
+            if (tasksForDay.length > 0) {
+                let taskHtml = '';
+                tasksForDay.forEach(task => {
+                    const statusIcon = task.completed ? '✅' : '📋';
+                    const statusClass = task.completed ? 'style="opacity: 0.7; text-decoration: line-through;"' : '';
+                    taskHtml += `<div ${statusClass}>${statusIcon} ${task.text}</div>`;
+                });
+                tasksList.innerHTML = taskHtml;
+            } else {
+                tasksList.innerHTML = '<div style="color: #666; font-style: italic;">No tasks scheduled for this day</div>';
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        function closeDailyNotesModal() {
+            document.getElementById('dailyNotesModal').style.display = 'none';
+        }
+
+        async function saveDailyNotes() {
+            if (!currentUserId || !selectedDate) return;
+            
+            const notesInput = document.getElementById('dailyNotesInput');
+            const notes = notesInput.value.trim();
+            
+            // Save to API
+            const result = await apiRequest(`/notes?userId=${currentUserId}`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    date_string: selectedDate,
+                    notes: notes
+                })
+            });
+            
+            if (result) {
+                // Update local storage
+                if (notes) {
+                    dailyNotes[selectedDate] = notes;
+                } else {
+                    delete dailyNotes[selectedDate];
+                }
+                
+                generateCalendar(); // Refresh calendar to show updated indicators
+                closeDailyNotesModal();
+                
+                // Show success message
+                const successMsg = document.createElement('div');
+                successMsg.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #4ade80;
+                    color: #000;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    z-index: 10000;
+                    animation: slideIn 0.3s ease-out;
+                `;
+                successMsg.textContent = '📝 Daily notes saved successfully!';
+                document.body.appendChild(successMsg);
+                
+                setTimeout(() => {
+                    successMsg.remove();
+                }, 3000);
+            } else {
+                alert('🦕 Failed to save daily notes. Please try again!');
+            }
+        }
+
+        // 🔹---💠---🔹•PROGRESS MODAL FUNCTIONALITY•🔹---💠---🔹
+        async function openProgressModal(type) {
+            const modal = document.getElementById('progressModal');
+            const progressType = document.getElementById('progressType');
+            const progressDetails = document.getElementById('progressDetails');
+            
+            progressType.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+            
+            let detailsHtml = '';
+            
+            switch(type) {
+                case 'tasks':
+                    const totalTasks = tasks.length;
+                    const completedTasks = tasks.filter(t => t.completed).length;
+                    const pendingTasks = totalTasks - completedTasks;
+                    const highPriorityTasks = tasks.filter(t => !t.completed && t.priority === 'high').length;
+                    const mediumPriorityTasks = tasks.filter(t => !t.completed && t.priority === 'medium').length;
+                    const lowPriorityTasks = tasks.filter(t => !t.completed && t.priority === 'low').length;
+                    
+                    detailsHtml = `
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="color: #daa520; margin-bottom: 10px;">📊 Task Statistics</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                                    <div style="font-size: 2em; color: #4ade80; margin-bottom: 5px;">${completedTasks}</div>
+                                    <div style="color: #999;">Completed Tasks</div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                                    <div style="font-size: 2em; color: #f39c12; margin-bottom: 5px;">${pendingTasks}</div>
+                                    <div style="color: #999;">Pending Tasks</div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                                    <div style="font-size: 2em; color: #e74c3c; margin-bottom: 5px;">${highPriorityTasks}</div>
+                                    <div style="color: #999;">High Priority</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="color: #daa520; margin-bottom: 10px;">🏷️ Priority Breakdown</h3>
+                            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                                <div style="margin-bottom: 8px;">🔥 High Priority: ${highPriorityTasks} tasks</div>
+                                <div style="margin-bottom: 8px;">⚡ Medium Priority: ${mediumPriorityTasks} tasks</div>
+                                <div>💤 Low Priority: ${lowPriorityTasks} tasks</div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 style="color: #daa520; margin-bottom: 10px;">💡 Productivity Tips</h3>
+                            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                                <div style="margin-bottom: 8px;">• Focus on high-priority tasks first</div>
+                                <div style="margin-bottom: 8px;">• Break large tasks into smaller chunks</div>
+                                <div style="margin-bottom: 8px;">• Use the Discord bot for smart scheduling</div>
+                                <div>• Take regular breaks to maintain focus</div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'energy':
+                    detailsHtml = `
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="color: #daa520; margin-bottom: 10px;">⚡ Energy Tracking</h3>
+                            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                                <div style="margin-bottom: 10px;">Current Energy Level: <span style="color: #3498db; font-weight: bold;">20%</span></div>
+                                <div style="margin-bottom: 10px;">Today's Peak: <span style="color: #4ade80;">85%</span> (9:00 AM)</div>
+                                <div>Today's Low: <span style="color: #e74c3c;">15%</span> (3:00 PM)</div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="color: #daa520; margin-bottom: 10px;">🔋 Energy Patterns</h3>
+                            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                                <div style="margin-bottom: 8px;">• Morning (6-10 AM): High energy - best for important tasks</div>
+                                <div style="margin-bottom: 8px;">• Midday (10 AM-2 PM): Moderate energy - good for routine work</div>
+                                <div style="margin-bottom: 8px;">• Afternoon (2-6 PM): Low energy - perfect for light tasks</div>
+                                <div>• Evening (6-10 PM): Moderate energy - planning and reflection</div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 style="color: #daa520; margin-bottom: 10px;">💡 Energy Boosters</h3>
+                            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                                <div style="margin-bottom: 8px;">• Take a 5-minute walk</div>
+                                <div style="margin-bottom: 8px;">• Practice deep breathing exercises</div>
+                                <div style="margin-bottom: 8px;">• Stay hydrated throughout the day</div>
+                                <div>• Get some natural sunlight</div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'focus':
+                    detailsHtml = `
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="color: #daa520; margin-bottom: 10px;">🎯 Focus Tracking</h3>
+                            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                                <div style="margin-bottom: 10px;">Current Focus Level: <span style="color: #e74c3c; font-weight: bold;">60%</span></div>
+                                <div style="margin-bottom: 10px;">Today's Focus Time: <span style="color: #4ade80;">2.5 hours</span></div>
+                                <div>Longest Focus Session: <span style="color: #f39c12;">45 minutes</span></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="color: #daa520; margin-bottom: 10px;">🕐 Focus Sessions Today</h3>
+                            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                                <div style="margin-bottom: 8px;">• 9:00 AM - 9:25 AM: Pomodoro (25 min) ✅</div>
+                                <div style="margin-bottom: 8px;">• 10:30 AM - 11:15 AM: Deep work (45 min) ✅</div>
+                                <div style="margin-bottom: 8px;">• 2:00 PM - 3:00 PM: Animedoro (60 min) ✅</div>
+                                <div style="color: #666;">• 4:00 PM - 4:25 PM: Pomodoro (planned)</div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 style="color: #daa520; margin-bottom: 10px;">🧠 Focus Techniques</h3>
+                            <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                                <div style="margin-bottom: 8px;">• 🦕 Pomodoro: 25 min work + 5 min break</div>
+                                <div style="margin-bottom: 8px;">• 📺 Animedoro: 60 min work + 20 min break</div>
+                                <div style="margin-bottom: 8px;">• 🎯 Deep Work: 45-90 min focused sessions</div>
+                                <div>• 🔁 Timeboxing: Set specific time limits for tasks</div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            progressDetails.innerHTML = detailsHtml;
+            modal.style.display = 'block';
+        }
+
+        function closeProgressModal() {
+            document.getElementById('progressModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

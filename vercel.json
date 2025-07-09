@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "name": "starcrunch-dashboard",
+  "builds": [
+    {
+      "src": "dashboard.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/dashboard.html"
+    },
+    {
+      "src": "/dashboard/(.*)",
+      "dest": "/dashboard.html"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "api/*.js": {
+      "maxDuration": 30
+    }
+  }
+}

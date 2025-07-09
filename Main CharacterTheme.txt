@@ -1,0 +1,40 @@
+  Main Character/Theme:
+  - 🦕 (dinosaur - Starcrunch)
+  - 🚀 (rocket - space theme)
+
+  Task Categories:
+  - 📅 (calendar - appointments)
+  - 🧹 (broom - cleaning tasks)
+  - 🛍️ (shopping bags - errands)
+  - 💼 (briefcase - work tasks)
+  - 👤 (person - personal tasks)
+  - 📋 (clipboard - generic tasks)
+
+  Priority Levels:
+  - 🔥 (fire - high priority)
+  - ⚡ (lightning - medium priority)
+  - 💤 (sleeping - low priority)
+
+  Status & Actions:
+  - ✅ (checkmark - completed)
+  - 📡 (satellite - connected/online)
+  - ⏰ (alarm clock - time/duration)
+  - 🎯 (target - goals/tasks)
+  - 🏆 (trophy - achievements)
+  - 💡 (lightbulb - suggestions/tips)
+
+  UI & Feedback:
+  - 🌅 (sunrise - morning tasks)
+  - 🏪 (convenience store - errands)
+  - 📁 (folder - data/files)
+  - ⚠️ (warning - alerts)
+  - ❌ (X - errors)
+  - 🔍 (magnifying glass - search/check)
+  - 🧹 (broom - cleanup)
+
+  Suggestions & Tips:
+  - 🌅 (sunrise - morning energy)
+  - 🛍️ (shopping - batching errands)
+  - 🏪 (store - check hours)
+  - ⏰ (clock - peak focus)
+  - 🔥 (fire - high priority/ASAP)
