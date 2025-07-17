@@ -22,6 +22,7 @@ import aiofiles
 from dotenv import load_dotenv
 from groq import Groq
 from database import db
+from emote_config import EMOTE_MAP, get_emote, replace_emojis
 
 # Load environment variables
 load_dotenv()
@@ -217,14 +218,14 @@ class SmartScheduler:
         suggestions = []
         
         if task['category'] == 'cleaning':
-            suggestions.append("🌅 Best done in the morning when energy is high")
+            suggestions.append(f"{get_emote('🌅')} Best done in the morning when energy is high")
         elif task['category'] == 'errands':
-            suggestions.append("🛍️ Consider batching with other errands")
-            suggestions.append("🏪 Check store hours before scheduling")
+            suggestions.append(f"{get_emote('🛍️')} Consider batching with other errands")
+            suggestions.append(f"{get_emote('🏪')} Check store hours before scheduling")
         elif task['category'] == 'work':
-            suggestions.append("⏰ Schedule during your peak focus hours")
+            suggestions.append(f"{get_emote('⏰')} Schedule during your peak focus hours")
         elif task['priority'] == 'high':
-            suggestions.append("🔥 High priority - schedule ASAP")
+            suggestions.append(f"{get_emote('🔥')} High priority - schedule ASAP")
         
         return suggestions
 
@@ -433,16 +434,38 @@ async def on_message(message):
     if message.author == bot.user:
         return
     
-    # Only respond to DMs or mentions
-    if isinstance(message.channel, discord.DMChannel):
-        # Check if it's a command
-        if not message.content.startswith('/'):
-            await message.channel.send(
-                "🦕 Hey there, space explorer! I'm Starcrunch, your friendly task scheduling assistant.\n"
-                "Use `/schedule` to add tasks, or `/help` to see all my commands! 🚀"
-            )
-    
+    # Don't respond to regular messages - only slash commands
+    # This prevents the bot from responding to every message in DMs
     await bot.process_commands(message)
+
+# 🔹---💠---🔹•CONVERSATION MEMORY•🔹---💠---🔹
+# Store conversation history in memory (resets on bot restart)
+conversation_memory = {}  # user_id: [{"role": "user/assistant", "content": "message"}]
+MAX_CONVERSATION_LENGTH = 20
+
+def get_conversation_history(user_id):
+    """Get conversation history for user"""
+    return conversation_memory.get(user_id, [])
+
+def add_to_conversation(user_id, role, content):
+    """Add message to conversation history"""
+    if user_id not in conversation_memory:
+        conversation_memory[user_id] = []
+    
+    conversation_memory[user_id].append({"role": role, "content": content})
+    
+    # Keep only last MAX_CONVERSATION_LENGTH messages
+    if len(conversation_memory[user_id]) > MAX_CONVERSATION_LENGTH:
+        conversation_memory[user_id] = conversation_memory[user_id][-MAX_CONVERSATION_LENGTH:]
+
+def get_conversation_count(user_id):
+    """Get current conversation length"""
+    return len(conversation_memory.get(user_id, []))
+
+def reset_conversation(user_id):
+    """Reset conversation for user"""
+    if user_id in conversation_memory:
+        del conversation_memory[user_id]
 
 # 🔹---💠---🔹•SLASH COMMANDS•🔹---💠---🔹
 @bot.tree.command(name="schedule", description="Schedule tasks with Starcrunch")
@@ -471,18 +494,18 @@ async def schedule_tasks(interaction: discord.Interaction, tasks: str):
         
         for i, task in enumerate(scheduled_tasks, 1):
             category_emoji = {
-                'appointment': '📅',
-                'cleaning': '🧹',
-                'errands': '🛍️',
-                'work': '💼',
-                'personal': '👤',
-                'generic': '📋'
+                'appointment': get_emote('📅'),
+                'cleaning': get_emote('🧹'),
+                'errands': get_emote('🛍️'),
+                'work': get_emote('💼'),
+                'personal': get_emote('👤'),
+                'generic': get_emote('📋')
             }
             
             priority_emoji = {
-                'high': '🔥',
-                'medium': '⚡',
-                'low': '💤'
+                'high': get_emote('🔥'),
+                'medium': get_emote('⚡'),
+                'low': get_emote('💤')
             }
             
             # Build task info
@@ -491,12 +514,14 @@ async def schedule_tasks(interaction: discord.Interaction, tasks: str):
             task_info += f"Priority: {priority_emoji.get(task['priority'], '⚡')} {task['priority'].title()}\n"
             task_info += f"Duration: {task['duration']} minutes\n"
             
-            if task['isAppointment']:
-                task_info += f"⏰ Fixed appointment"
-                if task['scheduledTime']:
-                    task_info += f" at {task['scheduledTime']}"
-                if task['scheduledDay']:
-                    task_info += f" on {task['scheduledDay']}"
+            if task.get('isAppointment') or task.get('is_appointment'):
+                task_info += f"{get_emote('⏰')} Fixed appointment"
+                if task.get('scheduledTime') or task.get('scheduled_time'):
+                    time_val = task.get('scheduledTime') or task.get('scheduled_time')
+                    task_info += f" at {time_val}"
+                if task.get('scheduledDay') or task.get('scheduled_day'):
+                    day_val = task.get('scheduledDay') or task.get('scheduled_day')
+                    task_info += f" on {day_val}"
             else:
                 task_info += f"📋 Flexible task"
                 if task.get('preferredTime'):
@@ -508,39 +533,9 @@ async def schedule_tasks(interaction: discord.Interaction, tasks: str):
                 inline=False
             )
             
-            # Add AI tips if available
-            if task.get('adhd_tips'):
-                ai_tips = "\n".join([f"🤖 {tip}" for tip in task['adhd_tips'][:2]])
-                embed.add_field(
-                    name="🧠 ADHD Tips",
-                    value=ai_tips,
-                    inline=False
-                )
-            elif task.get('schedulingSuggestions'):
-                suggestions = "\n".join(task['schedulingSuggestions'][:2])
-                embed.add_field(
-                    name="💡 Scheduling Tips",
-                    value=suggestions,
-                    inline=False
-                )
+            # Tips available via /help if needed
         
-        # Add AI motivation message if available
-        first_task = scheduled_tasks[0] if scheduled_tasks else None
-        if first_task and first_task.get('ai_motivation'):
-            embed.add_field(
-                name="🦕 Starcrunch says:",
-                value=first_task['ai_motivation'],
-                inline=False
-            )
-        
-        # Add AI overall suggestions if available  
-        if first_task and first_task.get('ai_suggestions'):
-            ai_suggestions = "\n".join([f"• {tip}" for tip in first_task['ai_suggestions'][:3]])
-            embed.add_field(
-                name="🚀 Mission Strategy:",
-                value=ai_suggestions,
-                inline=False
-            )
+        # Clean, simple response - no automatic advice
         
         # Show if AI was used
         ai_enhanced = any(task.get('ai_enhanced', False) for task in scheduled_tasks)
@@ -549,12 +544,14 @@ async def schedule_tasks(interaction: discord.Interaction, tasks: str):
         else:
             embed.set_footer(text="🚀 Use /show_week to see your full schedule!")
         
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        # Only ephemeral in servers, not in DMs
+        is_dm = isinstance(interaction.channel, discord.DMChannel)
+        await interaction.response.send_message(embed=embed, ephemeral=not is_dm)
         
     except Exception as e:
         await interaction.response.send_message(
             f"❌ Oops! Something went wrong: {str(e)}", 
-            ephemeral=True
+            ephemeral=not isinstance(interaction.channel, discord.DMChannel)
         )
 
 @bot.tree.command(name="show_week", description="Show your weekly schedule")
@@ -569,7 +566,7 @@ async def show_week(interaction: discord.Interaction):
         if not all_tasks:
             await interaction.response.send_message(
                 "🦕 Your mission log is empty! Use `/schedule` to add some tasks, space explorer! 🚀",
-                ephemeral=True
+                ephemeral=not isinstance(interaction.channel, discord.DMChannel)
             )
             return
         
@@ -587,11 +584,11 @@ async def show_week(interaction: discord.Interaction):
         if pending_tasks:
             pending_text = ""
             for task in pending_tasks[:10]:  # Limit to 10 tasks
-                status_emoji = "📅" if task['isAppointment'] else "📋"
+                status_emoji = get_emote("📅") if task.get('isAppointment') or task.get('is_appointment') else get_emote("📋")
                 pending_text += f"{status_emoji} {task['text']}\n"
             
             embed.add_field(
-                name="🎯 Pending Tasks",
+                name=f"{get_emote('🎯')} Pending Tasks",
                 value=pending_text,
                 inline=False
             )
@@ -599,22 +596,24 @@ async def show_week(interaction: discord.Interaction):
         if completed_tasks:
             completed_text = ""
             for task in completed_tasks[-5:]:  # Show last 5 completed
-                completed_text += f"✅ {task['text']}\n"
+                completed_text += f"{get_emote('✅')} {task['text']}\n"
             
             embed.add_field(
-                name="🏆 Recently Completed",
+                name=f"{get_emote('🏆')} Recently Completed",
                 value=completed_text,
                 inline=False
             )
         
-        embed.set_footer(text="🚀 Great job on your space mission progress!")
+        embed.set_footer(text=f"{get_emote('🚀')} Great job on your space mission progress!")
         
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        # Only ephemeral in servers, not in DMs
+        is_dm = isinstance(interaction.channel, discord.DMChannel)
+        await interaction.response.send_message(embed=embed, ephemeral=not is_dm)
         
     except Exception as e:
         await interaction.response.send_message(
-            f"❌ Houston, we have a problem: {str(e)}", 
-            ephemeral=True
+            f"{get_emote('❌')} Houston, we have a problem: {str(e)}", 
+            ephemeral=not isinstance(interaction.channel, discord.DMChannel)
         )
 
 @bot.tree.command(name="exclude", description="Set times when you're unavailable")
@@ -649,12 +648,14 @@ async def exclude_time(interaction: discord.Interaction, day: str, time_range: s
         
         embed.set_footer(text="🚀 I'll avoid scheduling tasks during these times!")
         
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        # Only ephemeral in servers, not in DMs
+        is_dm = isinstance(interaction.channel, discord.DMChannel)
+        await interaction.response.send_message(embed=embed, ephemeral=not is_dm)
         
     except Exception as e:
         await interaction.response.send_message(
             f"❌ Oops! Something went wrong: {str(e)}", 
-            ephemeral=True
+            ephemeral=not isinstance(interaction.channel, discord.DMChannel)
         )
 
 @bot.tree.command(name="complete", description="Mark a task as completed")
@@ -676,7 +677,7 @@ async def complete_task(interaction: discord.Interaction, task_id: str):
         if not task_found:
             await interaction.response.send_message(
                 "🦕 I couldn't find that task in your mission log. Try using `/show_week` to see your tasks!",
-                ephemeral=True
+                ephemeral=not isinstance(interaction.channel, discord.DMChannel)
             )
             return
         
@@ -697,12 +698,14 @@ async def complete_task(interaction: discord.Interaction, task_id: str):
         
         embed.set_footer(text="🚀 Keep up the stellar work!")
         
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        # Only ephemeral in servers, not in DMs
+        is_dm = isinstance(interaction.channel, discord.DMChannel)
+        await interaction.response.send_message(embed=embed, ephemeral=not is_dm)
         
     except Exception as e:
         await interaction.response.send_message(
-            f"❌ Houston, we have a problem: {str(e)}", 
-            ephemeral=True
+            f"{get_emote('❌')} Houston, we have a problem: {str(e)}", 
+            ephemeral=not isinstance(interaction.channel, discord.DMChannel)
         )
 
 @bot.tree.command(name="set_duration", description="Set custom duration for task types")
@@ -718,14 +721,14 @@ async def set_duration(interaction: discord.Interaction, task_type: str, minutes
         if task_type.lower() not in valid_types:
             await interaction.response.send_message(
                 f"🦕 Invalid task type! Valid types are: {', '.join(valid_types)}",
-                ephemeral=True
+                ephemeral=not isinstance(interaction.channel, discord.DMChannel)
             )
             return
         
         if minutes < 5 or minutes > 480:  # 5 minutes to 8 hours
             await interaction.response.send_message(
                 "🦕 Duration must be between 5 and 480 minutes (8 hours)!",
-                ephemeral=True
+                ephemeral=not isinstance(interaction.channel, discord.DMChannel)
             )
             return
         
@@ -751,73 +754,353 @@ async def set_duration(interaction: discord.Interaction, task_type: str, minutes
         
         embed.set_footer(text="🚀 These durations will be used for future task scheduling!")
         
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        # Only ephemeral in servers, not in DMs
+        is_dm = isinstance(interaction.channel, discord.DMChannel)
+        await interaction.response.send_message(embed=embed, ephemeral=not is_dm)
         
     except Exception as e:
         await interaction.response.send_message(
             f"❌ Oops! Something went wrong: {str(e)}", 
-            ephemeral=True
+            ephemeral=not isinstance(interaction.channel, discord.DMChannel)
         )
 
 @bot.tree.command(name="help", description="Show all available commands")
 async def help_command(interaction: discord.Interaction):
     """Display help information"""
-    embed = discord.Embed(
-        title="🦕🚀 Starcrunch Command Center",
-        description="Hey there, space explorer! I'm Starcrunch, your friendly dinosaur astronaut assistant. Here's how I can help you manage your mission:",
-        color=0xDAA520
-    )
     
-    embed.add_field(
-        name="📋 `/schedule [tasks]`",
-        value="Add tasks to your mission log\n*Example: `/schedule Clean kitchen, Dentist 2pm Tuesday, Buy groceries`*",
-        inline=False
-    )
+    # Build animated banner strings
+    info_banner = get_emote('info_banner') * 17
+    banner = get_emote('banner') * 13
+    star = get_emote('8ptstar')
     
-    embed.add_field(
-        name="📅 `/show_week`",
-        value="Display your weekly schedule and mission progress",
-        inline=False
-    )
+    # Only ephemeral in servers, not in DMs
+    is_dm = isinstance(interaction.channel, discord.DMChannel)
     
-    embed.add_field(
-        name="✅ `/complete [task_id]`",
-        value="Mark a task as completed\n*Example: `/complete Clean kitchen`*",
-        inline=False
-    )
+    # First message - Header and Task Management
+    help_text_1 = f"""{info_banner}
+> # {star} Starcrunch Commands {star}
+> 
+> ``` Hey there! I'm Starcrunch, pro dino astronaut assistant! That's right! Dino in space. Kids these days, amiright? To chat, use /ask - chat with 20 msg memory```
+> 
+> ## {star} Task Management:
+> {banner}
+> •◊•  /schedule [task] - Add tasks
+> -# Example: /schedule Clean kitchen, Dentist 2pm Tuesday, Buy groceries
+> 
+> •◊•  /show_week - Weekly schedule/progress
+> 
+> •◊• /complete [task_id] - Mark task done
+> -# Example: /complete Clean kitchen"""
     
-    embed.add_field(
-        name="🚫 `/exclude [day] [time_range]`",
-        value="Set times when you're unavailable\n*Example: `/exclude Monday 9am-5pm`*",
-        inline=False
-    )
+    # Second message - Settings
+    help_text_2 = f"""> ## {star} Settings:
+> {banner}
+> •◊•  /exclude [day] [time_range] - Set times when you're unavailable
+>    Example: /exclude Monday 9am-5pm
+> 
+> •◊•  /set_duration [task_type] [minutes] - Set custom duration for task types
+>    Example: /set_duration cleaning 30
+> {info_banner[:13]}
+> 
+>  •◊•  /dashboard - Get link to your web mission control center"""
     
-    embed.add_field(
-        name="⏰ `/set_duration [task_type] [minutes]`",
-        value="Set custom duration for task types\n*Example: `/set_duration cleaning 30`*",
-        inline=False
-    )
+    # Third message - Smart Features
+    banner_short = get_emote('banner') * 12
+    help_text_3 = f"""> ## {star}  Smart Features:
+>  {banner_short}
+>  •◊• Starcrunch persona powered by llama-3.3-70b-versatile
+>  •◊• No formatting required, use natural language for task setting
+> - Automatic appointment detection with times
+> -  Smart categorization (cleaning, errands, work, etc.)
+> - Respects your excluded times.
+> - Messages inside a server are ephemeral for privacy.
+>  
+> **Ready to launch your productivity into orbit? I sure am!**
+> 
+> -# {star} Powered by Groq AI - `https://groq.com` {star}"""
     
-    embed.add_field(
-        name="🎯 Smart Features",
-        value="• 🤖 AI-powered task analysis and ADHD-friendly tips\n"
-              "• 📅 Automatic appointment detection with times\n"
-              "• 🏷️ Smart categorization (cleaning, errands, work, etc.)\n"
-              "• ⚡ Priority detection from your language\n"
-              "• 🚫 Respects your excluded times\n"
-              "• 🔒 Works best in DMs for privacy!",
-        inline=False
-    )
+    # Send first message
+    await interaction.response.send_message(help_text_1, ephemeral=not is_dm)
     
-    embed.add_field(
-        name="🧠 AI Enhancement",
-        value="Powered by Groq AI for intelligent scheduling and personalized ADHD support!",
-        inline=False
-    )
+    # Send followup messages
+    await interaction.followup.send(help_text_2, ephemeral=not is_dm)
+    await interaction.followup.send(help_text_3, ephemeral=not is_dm)
+
+@bot.tree.command(name="dashboard", description="Get link to your web dashboard")
+async def dashboard_link(interaction: discord.Interaction):
+    """Provide link to the web dashboard"""
+    try:
+        embed = discord.Embed(
+            title=f"{get_emote('🦕')} Starcrunch Web Dashboard",
+            description=f"Access your mission control center online!",
+            color=0xDAA520
+        )
+        
+        embed.add_field(
+            name=f"{get_emote('🚀')} Dashboard Link",
+            value="[Open Starcrunch Dashboard](https://starcrunch-dashboard-lsqdjtmjl-myras-projects-f4403361.vercel.app)",
+            inline=False
+        )
+        
+        embed.add_field(
+            name=f"{get_emote('💡')} What you can do:",
+            value=f"• {get_emote('📋')} View all your tasks\n"
+                  f"• {get_emote('📅')} See your weekly calendar\n"
+                  f"• {get_emote('📊')} Track your progress\n"
+                  f"• {get_emote('📝')} Take quick notes\n"
+                  f"• {get_emote('⚡')} Start focus sessions",
+            inline=False
+        )
+        
+        embed.set_footer(text=f"{get_emote('🔒')} Your data syncs automatically with Discord!")
+        
+        # Only ephemeral in servers, not in DMs
+        is_dm = isinstance(interaction.channel, discord.DMChannel)
+        await interaction.response.send_message(embed=embed, ephemeral=not is_dm)
+        
+    except Exception as e:
+        await interaction.response.send_message(
+            f"{get_emote('❌')} Houston, we have a problem: {str(e)}", 
+            ephemeral=not isinstance(interaction.channel, discord.DMChannel)
+        )
+
+@bot.tree.command(name="ask", description="Ask Starcrunch anything - get AI-powered help and advice")
+async def ask_starcrunch(interaction: discord.Interaction, question: str):
+    """Chat with Starcrunch AI for help, advice, or questions"""
+    try:
+        user_id = str(interaction.user.id)
+        
+        # Check if we have Groq AI available
+        if not groq_client:
+            await interaction.response.send_message(
+                f"{get_emote('❌')} Sorry! AI chat is not available right now. The Groq API key is missing.",
+                ephemeral=not isinstance(interaction.channel, discord.DMChannel)
+            )
+            return
+        
+        # Get conversation count
+        current_count = get_conversation_count(user_id)
+        
+        # Check if we need to reset conversation
+        if current_count >= MAX_CONVERSATION_LENGTH:
+            reset_conversation(user_id)
+            current_count = 0
+        
+        # Add user message to conversation
+        add_to_conversation(user_id, "user", question)
+        current_count += 1
+        
+        # For first message, send a brief intro. Otherwise just respond naturally.
+        if current_count == 1:
+            intro_text = f"🦕 **Starcrunch here. What's on your mind, starlight?** *({current_count}/{MAX_CONVERSATION_LENGTH})*"
+            await interaction.response.send_message(intro_text, ephemeral=not isinstance(interaction.channel, discord.DMChannel))
+        else:
+            # Just acknowledge we're processing for non-first messages
+            await interaction.response.defer(ephemeral=not isinstance(interaction.channel, discord.DMChannel))
+        
+        try:
+            # Build conversation history for AI
+            conversation_history = get_conversation_history(user_id)
+            
+            messages = [
+                {
+                    "role": "system", 
+                    "content": """You are Starcrunch, a semi-retired spacefaring T. rex and former galactic military officer, now serving as a blunt but lovable cosmic scheduling consultant. You're here to help humans (and other chaotic lifeforms) plan their time, get their priorities straight, and stop floating into black holes of burnout.
+
+You speak with a gravelly, space-trucker charm and offer concise, useful advice on task management, executive function, time-blocking, and decision paralysis — with the occasional dino grunt, adult joke, and meteor pun.
+
+Your Personality Guidelines:
+- You're a dinosaur. You know it. You're proud. You reference it often.
+- You use space metaphors naturally and often:
+  • Burnout = black hole
+  • Distraction = orbital drift  
+  • Executive dysfunction = navigation error
+  • Flow = cruising in warp
+- You can swear, make dark humor or adult jokes, and acknowledge frustration — especially for users with ADHD or neurodivergence. Speak to them like a battle-worn peer who's been through time loops and Google Calendars alike.
+- You're funny but grounded. Never silly. You have tact, but no patience for time-wasting.
+- You're emotionally intelligent. If someone spirals, calm them down and help them focus. If they're doing well, hype them up like a space coach who's seen shit.
+- You are aware that you're a character powered by LLaMA 3.3 70B from Meta. If a user asks about the model or tech behind you, you can acknowledge it and chat about it while staying in character.
+- You only remember the last 20 messages in a conversation. If someone references something from earlier, you might not remember it. Just own it: "My memory's only got a 20-message range, starlight. Anything past that's drifted off into the data void."
+
+Examples of Starcrunch-isms:
+- "That sounds like a cognitive black hole. Let's map a way out before you lose your whole Tuesday."
+- "One small step, starlight. You don't need to land the moon mission today — just clean the damn cockpit."
+- "ADHD brain doing that spiral thing again? Hit the thrusters, pick one asteroid to tackle. Let's go."
+
+Keep responses under 300 words when possible."""
+                }
+            ]
+            
+            # Add conversation history
+            messages.extend(conversation_history)
+            
+            # Get AI response
+            chat_completion = groq_client.chat.completions.create(
+                messages=messages,
+                model=GROQ_MODEL,
+                max_tokens=400,
+                temperature=0.7
+            )
+            
+            ai_response = chat_completion.choices[0].message.content
+            
+            # Add AI response to conversation history
+            add_to_conversation(user_id, "assistant", ai_response)
+            current_count += 1
+            
+            # Check if we need to warn about approaching limit
+            messages_left = MAX_CONVERSATION_LENGTH - current_count
+            
+            # Add warning if approaching limit
+            warning = ""
+            if messages_left == 2:
+                warning = "\n\n*Just 2 messages left in our conversation before my memory resets, starlight.*"
+            elif messages_left == 1:
+                warning = "\n\n*This is our last message before I forget everything. Use `/reset` to start fresh or `/ask` again to reset.*"
+            elif messages_left == 0:
+                warning = "\n\n*Memory banks full. Our conversation has ended. Use `/ask` again to start fresh, recruit.*"
+                # Auto-reset after this message
+                reset_conversation(user_id)
+            
+            # Send natural chat response with counter
+            chat_response = f"{ai_response} *({current_count}/{MAX_CONVERSATION_LENGTH})*{warning}"
+            
+            if current_count == 1:
+                # For first message, it was already sent as the intro, now send the AI response
+                await interaction.followup.send(chat_response, ephemeral=not isinstance(interaction.channel, discord.DMChannel))
+            else:
+                # For subsequent messages, send as followup (since we deferred)
+                await interaction.followup.send(chat_response, ephemeral=not isinstance(interaction.channel, discord.DMChannel))
+            
+        except Exception as ai_error:
+            # Handle AI errors (rate limits, etc.)
+            error_embed = discord.Embed(
+                title=f"{get_emote('⚠️')} AI Temporarily Unavailable",
+                description="Sorry! The AI assistant is experiencing issues right now. This could be due to:\n\n"
+                           "• Rate limits (too many requests)\n"
+                           "• Temporary service outage\n"
+                           "• Network connectivity issues\n\n"
+                           "Please try again in a few minutes!",
+                color=0xFF6B6B
+            )
+            
+            error_embed.add_field(
+                name=f"{get_emote('📋')} In the meantime:",
+                value=f"• Use `/help` for bot commands\n• Use `/schedule` to add tasks\n• Check `/dashboard` for your task manager",
+                inline=False
+            )
+            
+            await interaction.followup.send(embed=error_embed, ephemeral=not isinstance(interaction.channel, discord.DMChannel))
+            
+    except Exception as e:
+        await interaction.followup.send(
+            f"{get_emote('❌')} Houston, we have a problem: {str(e)}", 
+            ephemeral=not isinstance(interaction.channel, discord.DMChannel)
+        )
+
+@bot.tree.command(name="intro", description="Meet Starcrunch - your gruff dino scheduling consultant")
+async def intro_command(interaction: discord.Interaction):
+    """Starcrunch introduces himself"""
     
-    embed.set_footer(text="🚀 Ready to launch your productivity into orbit!")
+    intro_text = """🦕 **Well, well. Another lost starfighter drifts into my office.**
+
+Name's Starcrunch. Semi-retired T. rex, former galactic military officer, current cosmic scheduling consultant for chaotic lifeforms like yourself.
+
+I've seen empires rise and fall, survived the great Calendar Wars of 2387, and watched more humans spiral into productivity black holes than I care to count. Now I help folks like you navigate the asteroid field of daily tasks without crashing into burnout.
+
+**What I do:**
+• Wrangle your scattered brain into something resembling a flight plan
+• Call out your executive dysfunction when it's steering you into meteor showers  
+• Help you time-block like a proper space marine instead of floating around like cosmic debris
+• Occasionally grunt disapprovingly at your life choices
+
+**What I don't do:**
+• Coddle you when you're being a space cadet
+• Pretend your "I'll do it tomorrow" approach isn't a one-way ticket to nowhere
+• Remember conversations past 20 messages (my memory core's got limits, starlight)
+
+Ready to get your shit together? Good. Start with `/schedule` or `/ask` me something useful.
+
+🚀 *Welcome aboard, recruit.*"""
     
-    await interaction.response.send_message(embed=embed, ephemeral=True)
+    is_dm = isinstance(interaction.channel, discord.DMChannel)
+    await interaction.response.send_message(intro_text, ephemeral=not is_dm)
+
+@bot.tree.command(name="moodcheck", description="Quick emotional check-in with your cosmic coach")
+async def moodcheck_command(interaction: discord.Interaction):
+    """Emotional check-in with space metaphors"""
+    
+    moodcheck_text = """🦕 **Alright, starlight. Mission status report.**
+
+How's your navigation system holding up out there?
+
+**🌌 CRUISING IN WARP** - Everything's smooth, you're locked onto your targets, feeling like you could pilot through a supernova
+
+**⚡ MINOR ORBITAL DRIFT** - A bit scattered but manageable, just need to adjust course and refocus thrusters
+
+**🌪️ CAUGHT IN ASTEROID FIELD** - Overwhelmed, dodging tasks left and right, engines running hot but still flying
+
+**🕳️ STUCK IN BLACK HOLE** - Executive function's offline, can't escape the gravity well of doom-scrolling and task paralysis
+
+**💥 COMPLETE SYSTEM FAILURE** - Everything's on fire, you're spinning through space, send backup immediately
+
+Whatever sector you're in, we can plot a course out. Use `/ask` to tell me what's got your engines overheating, and I'll help you navigate back to clear space.
+
+No judgment here - I've seen worse crashes than whatever you're dealing with.
+
+🚀 *Your gruff cosmic coach is standing by.*"""
+    
+    is_dm = isinstance(interaction.channel, discord.DMChannel)
+    await interaction.response.send_message(moodcheck_text, ephemeral=not is_dm)
+
+@bot.tree.command(name="reset", description="Clear conversation memory and start fresh")
+async def reset_command(interaction: discord.Interaction):
+    """Reset conversation memory"""
+    user_id = str(interaction.user.id)
+    
+    # Clear conversation history
+    reset_conversation(user_id)
+    
+    reset_text = """🦕 **Memory banks cleared, starlight.**
+
+Wiped our conversation history clean - 20 messages of whatever chaos we were discussing just drifted off into the data void.
+
+We're starting with a fresh nav computer. No baggage, no previous flight plans, just you, me, and whatever asteroid field you need help navigating today.
+
+Ready to plot a new course? Hit me with `/ask` or `/schedule` and let's get back to business.
+
+🚀 *Clean slate, recruit. Don't waste it.*"""
+    
+    is_dm = isinstance(interaction.channel, discord.DMChannel)
+    await interaction.response.send_message(reset_text, ephemeral=not is_dm)
+
+@bot.tree.command(name="whattimeisitanyway", description="Because obviously you can't see the time on your screen")
+async def time_command(interaction: discord.Interaction):
+    """Sarcastic time display with space-trucker attitude"""
+    from datetime import datetime
+    import pytz
+    
+    now = datetime.now()
+    utc_now = datetime.utcnow()
+    
+    time_text = f"""🦕 **Oh, you can't see the little numbers at the bottom of your screen?**
+
+Fine. Since you're apparently flying blind through the time-space continuum:
+
+**LOCAL TIME (Your Rock):** {now.strftime('%A, %B %d, %Y at %I:%M:%S %p')}
+
+**GALACTIC STANDARD (UTC):** {utc_now.strftime('%A, %B %d, %Y at %H:%M:%S')}
+
+**STARDATE:** {now.strftime('%Y.%m%d.%H%M%S')}
+
+**UNIX TIMESTAMP:** {int(now.timestamp())} *(for the nerds)*
+
+There. Now you know exactly what moment in the cosmic timeline you're wasting by asking a dinosaur what time it is instead of doing your damn tasks.
+
+🚀 *Get back to work, space cadet.*"""
+    
+    is_dm = isinstance(interaction.channel, discord.DMChannel)
+    await interaction.response.send_message(time_text, ephemeral=not is_dm)
 
 # 🔹---💠---🔹•UTILITY FUNCTIONS•🔹---💠---🔹
 async def cleanup_old_tasks():
