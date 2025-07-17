@@ -1,17 +1,44 @@
 {
   "version": 2,
-  "name": "starcrunch-dashboard",
   "builds": [
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node"
+    },
     {
       "src": "dashboard.html",
       "use": "@vercel/static"
     },
     {
-      "src": "api/*.js",
-      "use": "@vercel/node"
+      "src": "*.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.png",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.gif",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "starcrunchemotes/*.png",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/starcrunchemotes/(.*)",
+      "dest": "/starcrunchemotes/$1"
+    },
     {
       "src": "/",
       "dest": "/dashboard.html"
@@ -19,15 +46,8 @@
     {
       "src": "/dashboard/(.*)",
       "dest": "/dashboard.html"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
     }
   ],
-  "env": {
-    "NODE_ENV": "production"
-  },
   "functions": {
     "api/*.js": {
       "maxDuration": 30

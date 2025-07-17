@@ -1,0 +1,32 @@
+{
+  "name": "starcrunch-dashboard",
+  "version": "1.0.0",
+  "description": "🦕🚀 Starcrunch - ADHD-friendly task scheduling dashboard with AI integration",
+  "main": "dashboard.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step needed for static dashboard'",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "mysql2": "^3.6.0",
+    "groq-sdk": "^0.3.0"
+  },
+  "devDependencies": {
+    "@vercel/node": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "starcrunch",
+    "adhd",
+    "task-scheduling",
+    "discord-bot",
+    "dashboard",
+    "ai",
+    "groq"
+  ],
+  "author": "Starcrunch Team",
+  "license": "MIT"
+}

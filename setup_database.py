@@ -13,12 +13,12 @@ load_dotenv()
 
 # Database configuration
 DB_CONFIG = {
-    'host': 'HOST_SECRET',
-    'port': 'PORT_NUMBER',
-    'user': 'USERNAME',
-    'password': 'PASSWORD',
-    'db': 'DATABASE',
-    'charset': 'CHARSET'
+    'host': 'db0.fps.ms',
+    'port': 3306,
+    'user': 'u48754_mRctAZqVYA',
+    'password': '^r^On@Mz@h9ixqVsmvD3nyDy',
+    'db': 's48754_Starcrunch',
+    'charset': 'utf8mb4'
 }
 
 async def setup_database():
