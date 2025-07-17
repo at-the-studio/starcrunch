@@ -5,9 +5,3 @@ groq>=0.11.0
 aiomysql>=0.2.0
 flask>=2.3.0
 flask-cors>=4.0.0
-asyncio
-datetime
-typing
-re
-json
-os

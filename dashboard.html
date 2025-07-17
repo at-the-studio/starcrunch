@@ -561,6 +561,7 @@
                 </div>
                 <div class="status-item">
                     <span id="user-info">Loading...</span>
+                    <button onclick="changeUserId()" style="margin-left: 10px; padding: 4px 8px; font-size: 0.8em; background: rgba(218,165,32,0.2); border: 1px solid #daa520; border-radius: 4px; color: #daa520; cursor: pointer;">Change ID</button>
                 </div>
             </div>
         </div>
@@ -789,10 +790,34 @@
             if (!userId) {
                 userId = prompt('🦕 Enter your Discord User ID to sync with your tasks:');
                 if (userId) {
+                    // Extract just the numeric ID if a URL was pasted
+                    userId = extractDiscordId(userId);
                     localStorage.setItem('starcrunch_user_id', userId);
                 }
             }
             return userId;
+        }
+
+        // Extract Discord ID from URL or return as-is if already an ID
+        function extractDiscordId(input) {
+            // Check if it's a Discord URL
+            const urlMatch = input.match(/discord\.com\/users\/(\d+)/);
+            if (urlMatch) {
+                return urlMatch[1];
+            }
+            // Return as-is if it's already just numbers
+            return input.trim();
+        }
+
+        // Function to change user ID
+        function changeUserId() {
+            const newId = prompt('🦕 Enter your new Discord User ID:', currentUserId || '');
+            if (newId && newId !== currentUserId) {
+                const extractedId = extractDiscordId(newId);
+                localStorage.setItem('starcrunch_user_id', extractedId);
+                // Reload the page to apply changes
+                window.location.reload();
+            }
         }
         
         // API Helper Functions
@@ -1559,5 +1584,8 @@
             document.getElementById('progressModal').style.display = 'none';
         }
     </script>
+    
+    <!-- Discord Emotes Handler -->
+    <script src="emotes.js"></script>
 </body>
 </html>
